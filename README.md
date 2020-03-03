@@ -1,6 +1,6 @@
 # sfpowerkit
 
-[![NPM](https://img.shields.io/npm/v/sfpowerkit.svg)](https://www.npmjs.com/package/sfpowerkit) ![npm (tag)](https://img.shields.io/npm/v/sfpowerkit/beta) [![Build status](https://dev.azure.com/cloudfirstanz/SFPowerkit/_apis/build/status/SFPowerkit-CI)](https://dev.azure.com/cloudfirstanz/SFPowerkit/_build/latest?definitionId=5) [![Greenkeeper badge](https://badges.greenkeeper.io/Accenture/sfpowerkit.svg)](https://greenkeeper.io/)![npm](https://img.shields.io/npm/dw/sfpowerkit)
+[![NPM](https://img.shields.io/npm/v/sfpowerkit.svg)](https://www.npmjs.com/package/sfpowerkit) ![npm (tag)](https://img.shields.io/npm/v/sfpowerkit/beta) [![Build status](https://dev.azure.com/cloudfirstanz/SFPowerkit/_apis/build/status/SFPowerkit-CI)](https://dev.azure.com/dxatscale/SFPowerkit/_build/latest?definitionId=5) [![Greenkeeper badge](https://badges.greenkeeper.io/Accenture/sfpowerkit.svg)](https://greenkeeper.io/)![npm](https://img.shields.io/npm/dw/sfpowerkit)
 
 A Salesforce DX Plugin with multiple functionalities aimed at improving development and operational workflows
 Read the blog here https://accenture.github.io/blog/2019/06/27/sfpowerkit.html
@@ -222,7 +222,7 @@ OPTIONS
   --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: warn] logging level for this command invocation
 
 EXAMPLE
-  $ sfdx sfpowerkit:source:customlabel:reconcile -p path/to/customlabelfile.xml -d core
+  $ sfdx sfpowerkit:source:customlabel:reconcile -d path/to/customlabelfile.xml -p core
   Package ::: core
   Reconciled The Custom Labels, only to have core labels (labels with full name beginning with core_)
 ``
@@ -261,18 +261,27 @@ This command is of sufficient quality, however proceed with caution while adopti
 ```
 
 USAGE
-  $ sfdx sfpowerkit:project:diff  -d <string> [-f <string>] [  -e <string> ] [  -r <string> ] [  -t <string> ] [--json] [--loglevel trace|debug|info|warn|error|fatal]
+  $ sfdx sfpowerkit:project:diff -d <string> [-r <string>] [-t <string>] [-x] [-b <array>] [-p <array>] [--apiversion <string>] [--json]
+  [--loglevel trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL]
 
 OPTIONS
-  -d, --output=output                             (required) The output dir where the incremental project will be created
-  -f, --difffile=difffile                         The diff file from which the incremental project should be generated [git diff --raw]. Its an optional parameter, you can skip this parameter and set the revisionfrom and  revisionto parameter instead
-  -e, --encoding=encoding                         [default:utf8] Diff file encoding
-  -r, --revisionfrom=revisionfrom                 Base revision from where diff is to be generated, required if diff file is ommited
-  -t, --revisionto=revisionto                     [default:HEAD]Target revision to generate the diff
-  -x, --generatedestructive                       If set, the command will also generate a destructiveChange.xml file in the output folder.
+  -b, --bypass=bypass                                                               list of path to ignore, if diff found on the repo
+  -d, --output=output                                                               (required)  The output dir where the incremental project will be created
 
-  --json                                          format output as json
-  --loglevel=(trace|debug|info|warn|error|fatal)  [default: warn] logging level for this command invocation
+  -p, --packagedirectories=packagedirectories                                       project paths to run diff, if this is passed then override the path in sfdx-project.json
+
+  -r, --revisionfrom=revisionfrom                                                   Base revision from where diff is to be generated, required if diff file is ommited
+
+  -t, --revisionto=revisionto                                                       [default:HEAD] Target revision to generate the diff
+
+  -x, --generatedestructive                                                         If set to true, the command will also generate a destructiveChangePost.xml file in the
+                                                                                    output folder.
+
+  --apiversion=apiversion                                                           override the api version used for api requests made by this command
+
+  --json                                                                            format output as json
+
+  --loglevel=(trace|debug|info|warn|error|fatal|TRACE|DEBUG|INFO|WARN|ERROR|FATAL)  [default: info] logging level for this command invocation
 
 EXAMPLE
   $  sfdx sfpowerkit:project:diff --revisionfrom revisionfrom --revisionto revisionto --output OutputFolder
@@ -280,7 +289,7 @@ EXAMPLE
 
 ## `sfpowerkit:project:orgdiff [BETA]`
 
-Compare source files again the salesforce org and display differences. The command also add diff conflict markers in changed files to let the developer accept or reject changes manually using a git merge tool.
+Compare source files of a project against the salesforce org and display differences. The command also add diff conflict markers in changed files to let the developer accept or reject changes manually using a git merge tool. The idea behind this command is used to track changes done on an unlocked package or a modular repo against the changes done in a higher environment. This command is not yet ready to work on a single repo against the whole metadata in the org
 
 This command is of sufficient quality, however proceed with caution while adopting in your workflow
 
@@ -348,7 +357,7 @@ EXAMPLE
 
 _See code: [src\commands\sfpowerkit\package\dependencies\install.ts](https://github.com/Accenture/sfpowerkit/blob/master/src/commands/sfpowerkit/package/dependencies/install.ts)_
 
-## `sfpowerkit:source:picklist:generatepatch`
+## `sfpowerkit:source:picklist:generatepatch [DEPRECATED]`
 
 This command generates a patch in the format of a metadata packed together as a static resource with the intent of solving the following issues.
 
@@ -357,6 +366,8 @@ This command generates a patch in the format of a metadata packed together as a 
 3. Fix for business process and recordtype, that depend on a modified standard valueset and fail to package.
 
 These command is to be run just before the package:version: create command and any changes made by the command should not be committed to the repo. Once a patch is generated and the package is installed in the target org, run the apply patch command tofix the above issues.
+
+This command is now deprecated and will be removed shortly, please use standard methods.
 
 ```
 USAGE
@@ -388,9 +399,11 @@ EXAMPLE
 
 _See code: [src\commands\sfpowerkit\source\picklist\generatepatch.ts](https://github.com/Accenture/sfpowerkit/blob/master/src/commands/sfpowerkit/source/picklist/generatepatch.ts)_
 
-## `sfpowerkit:source:permissionset:generatepatch`
+## `sfpowerkit:source:permissionset:generatepatch [DEPRECATED]`
 
-Search permissionsets inside project and create a static resource file with permissionsets, used to solve the recordtype assignment upgrade issue in dx unlock package
+Search permissionsets inside project and create a static resource file with permissionsets, used to solve the recordtype assignment upgrade issue in dx unlock package.
+
+This command is now deprecated and will be removed shortly, please use standard methods. refer https://success.salesforce.com/issues_view?id=a1p3A0000003UjTQAU for more information.
 
 ```
 USAGE
